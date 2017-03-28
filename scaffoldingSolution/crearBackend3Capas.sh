@@ -3,12 +3,19 @@ SolutionFile="$SolutionName/$SolutionName.sln";
 gitIgnorePath="$SolutionName/.gitignore";
 projExt=".csproj";
 
-WebApiName="$SolutionName.WebApi";
-WebApiTestName="$SolutionName.WebApi.UnitTest"
+#webApi
+WebApiName="$SolutionName.Api";
+WebApiTestName="$SolutionName.Api.UnitTest"
 WebApiPath=${SolutionName%%/}/src/$WebApiName;
 WebApiProj=${WebApiPath%%/}/$WebApiName$projExt;
 WebApiTestPath=${SolutionName%%/}/test/$WebApiTestName;
 WebApiTestProj=${WebApiTestPath%%/}/$WebApiTestName$projExt;
+
+#WebApiMessages
+WebApiMessagesName="$SolutionName.Api.Messages";
+WebApiMessagesPath=${SolutionName%%/}/src/$WebApiMessagesName;
+WebApiMessagesProj=${WebApiMessagesPath%%/}/$WebApiMessagesName$projExt;
+
 #app layer
 AppLayerName="$SolutionName.Application";
 AppLayerTestName="$SolutionName.Application.UnitTest"
@@ -30,13 +37,16 @@ DALayerName="$SolutionName.DataAccessLayer";
 DALayerPath=${SolutionName%%/}/src/$DALayerName;
 DALayerProj=${DALayerPath%%/}/$DALayerName$projExt;
 
-#Data Access layer
+#Entities
 EntitiesName="$SolutionName.Entities";
 EntitiesPath=${SolutionName%%/}/src/$EntitiesName;
 EntitiesProj=${EntitiesPath%%/}/$EntitiesName$projExt;
 
 echo -e "\033[1;92m Create solution \033[0m"
 dotnet new sln -n $SolutionName -o "$SolutionName"
+
+echo -e "\033[1;92m Create Api Message Project \033[0m"
+dotnet new classlib -n $WebApiMessagesName -o "$WebApiMessagesPath" -f netcoreapp1.1
 
 echo -e "\033[1;92m Create webapi \033[0m"
 dotnet new webapi -n $WebApiName -o "$WebApiPath" -f netcoreapp1.1
@@ -75,10 +85,14 @@ for refProj in `find $SolutionName -name '*.csproj'` ; do dotnet sln $SolutionFi
 
 echo -e "\033[1;92m Add reference \033[0m";
 #reference web api test project
+dotnet add $WebApiProj reference $WebApiMessagesProj
 dotnet add $WebApiProj reference $AppLayerProj
 dotnet add $WebApiProj reference $BLayerProj
 dotnet add $WebApiProj reference $EntitiesProj
 dotnet add $WebApiProj package Newtonsoft.Json --package-directory $SolutionName/packages
+
+#reference Web Api Messages project
+dotnet add $WebApiMessagesProj reference $EntitiesProj
 
 #reference application api project
 dotnet add $AppLayerProj reference $BLayerProj
@@ -117,6 +131,7 @@ echo -e "\033[1;92m Open in vsCode \033[0m"
 code $SolutionName
 
 echo -e "\033[1;92m Git init and first commit \033[0m"
-cd $SolutionName
+pushd $SolutionName
 git init
 git add --all && git commit -m "Code generate by @CodeCraftersEs"
+popd
